@@ -1,7 +1,6 @@
 data/
 duckdb/
 parquet_chunks/
-Events_Features/
 Support_Data/
 
 # Virtual environments
