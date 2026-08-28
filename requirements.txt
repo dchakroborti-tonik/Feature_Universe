@@ -1,0 +1,30 @@
+# Core Data Science & Analytics
+pandas
+numpy
+scipy
+scikit-learn
+catboost
+duckdb
+pyarrow
+
+# Google Cloud & Storage
+google-cloud-bigquery
+google-cloud-storage
+db-dtypes
+gcsfs
+
+# Visualization
+matplotlib
+seaborn
+
+# Utilities & Excel / Text processing
+tqdm
+psutil
+joblib
+openpyxl
+fuzzywuzzy
+python-Levenshtein
+
+# Interactive Notebook Environment
+ipykernel
+notebook

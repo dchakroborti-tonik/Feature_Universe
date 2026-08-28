@@ -1,0 +1,186 @@
+
+# B Score model configuration
+# ─────────────────────────────────────────────────────────────────────────────
+from google.cloud import bigquery
+import time
+import pandas as pd
+from datetime import datetime
+
+# client = bigquery.Client()
+CURRENT_DATE = datetime.now().strftime("%Y%m%d")
+
+# Schema and table name definitions (update OBDATE for each model run)
+schema1 = 'risk_mart'
+schema2 = 'worktable_data_analysis'
+schema3 = 'dap_ds_poweruser_playground'
+
+GS_BUCKET = "prod-asia-southeast1-tonik-report-analytics"
+GS_BUCKET_OLD = "prod-asia-southeast1-tonik-aiml-workspace"
+PROJECT_ID = "prj-prod-dataplatform"
+
+tab = 'bscore'
+ver = 'v26'
+
+OBDATE = '2026-08-20'   # Observation date — update for each scoring run
+SDATE  = '2023-01-01'   # Start date for training window
+EDATE  = OBDATE
+
+formatted_date = datetime.strptime(SDATE, '%Y-%m-%d').strftime('%Y%m%d')
+ob_formatted   = datetime.strptime(OBDATE, '%Y-%m-%d').strftime('%Y%m%d')
+
+al       = f'applied_loans_20230101_{ob_formatted}'
+altrans  = f'applied_loans_20210701_{ob_formatted}_trans'
+nal      = f'tsa_onboarded_but_never_applied_loan_20230101_{ob_formatted}'
+
+# Intermediate staging tables
+bscorebasedata = f'{tab}_base_data_{ver}_{datetime.strptime(SDATE, '%Y-%m-%d').strftime('%Y%m%d')}_{datetime.strptime(OBDATE, '%Y-%m-%d').strftime('%Y%m%d')}'
+print(bscorebasedata)
+bscoresnapshotcustomerdata        = f'{tab}_applied_loans_customer_information_data_{ver}'
+bscoresnapshotcustomertransactiondata = f'{tab}_applied_loans_customer_transaction_data_{ver}'
+bscoresnapshotcustomerevent       = f'{tab}_applied_loans_customer_event_data_{ver}'
+bscoresnapshotcontactability      = f'{tab}_applied_loans_contactability_{ver}'
+bscoresnapshotcombineddata        = f'{tab}_model_applied_loans_{ver}_{ob_formatted}'
+
+
+step61 = f'{schema2}.{tab}_vb_results_{ver}_{ob_formatted}'
+step62 = f'{schema2}.{tab}_chatbot_{ver}_{ob_formatted}'
+step63 = f'{schema2}.{tab}_chatbot_fb_{ver}_{ob_formatted}'
+step64 = f'{schema2}.{tab}_chatbot_users_{ver}_{ob_formatted}'
+step65 = f'{schema2}.{tab}_genesys_chat_{ver}_{ob_formatted}'
+step66 = f'{schema2}.{tab}_genesys_email_{ver}_{ob_formatted}'
+step67 = f'{schema2}.{tab}_inbound_voice_{ver}_{ob_formatted}'
+step68 = f'{schema2}.{tab}_airudder_softcollection_calls_{ver}_{ob_formatted}'
+step682 = f'{schema2}.{tab}_cs_vb_cnt_calls_total_{ver}_{ob_formatted}'
+step69 = f'{schema2}.{tab}_reach_enhanced_{ver}_{ob_formatted}'
+step610 = f'{schema2}.{tab}_ars_results_{ver}_{ob_formatted}'
+step611 = f'{schema2}.{tab}_inbound_additional_features_{ver}_{ob_formatted}'
+step612 = f'{schema2}.{tab}_outbound_voice_features_{ver}_{ob_formatted}'
+step6 = f'{schema2}.{tab}_contact_features_extended_{ver}_{ob_formatted}'
+step7 = f'{schema2}.{tab}_contact_genesysdata_{ver}_{ob_formatted}'
+step8 = f'{schema2}.{tab}_loan_level_swathi_table_{ver}_{ob_formatted}'
+step9 = f'{schema2}.{tab}_ptp_details_{ver}_{ob_formatted}'
+
+step101 = f'{schema2}.{tab}_account_product_portfolio_composition_{ver}_{ob_formatted}'
+step102 = f'{schema2}.{tab}_activity_recency_dormancy_{ver}_{ob_formatted}'
+step103 = f'{schema2}.{tab}_tx_balance_liquidity_{ver}_{ob_formatted}'
+step104 = f'{schema2}.{tab}_bureau_external_scoring_{ver}_{ob_formatted}'
+step105 = f'{schema2}.{tab}_completion_settlement_metrics_{ver}_{ob_formatted}'
+step106 = f'{schema2}.{tab}_conversion_campaign_engagement_events_{ver}_{ob_formatted}'
+step107 = f'{schema2}.{tab}_customer_acquisition_retention_{ver}_{ob_formatted}'
+step108 = f'{schema2}.{tab}_customer_lifecycle_engagement_{ver}_{ob_formatted}'
+step109 = f'{schema2}.{tab}_demographic_verification_enhanced_{ver}_{ob_formatted}'
+step1010 = f'{schema2}.{tab}_deposit_savings_products_{ver}_{ob_formatted}'
+step1011 = f'{schema2}.{tab}_derived_ratio_metrics_{ver}_{ob_formatted}'
+step1012 = f'{schema2}.{tab}_fraud_compliance_indicators_{ver}_{ob_formatted}'
+step1013 = f'{schema2}.{tab}_loan_product_specific_metrics_{ver}_{ob_formatted}'
+step1014 = f'{schema2}.{tab}_loan_staging_milestones_{ver}_{ob_formatted}'
+step10151 = f'{schema2}.{tab}_payment_behaviour_advanced_{ver}_{ob_formatted}'
+step10152 = f'{schema2}.{tab}_payment_behaviour_advanced_2_{ver}_{ob_formatted}'
+step1016 = f'{schema2}.{tab}_revenue_fee_decomposition_{ver}_{ob_formatted}'
+step1017 = f'{schema2}.{tab}_risk_segmentation_categorization_{ver}_{ob_formatted}'
+step1018 = f'{schema2}.{tab}_time_window_cohort_features_{ver}_{ob_formatted}'
+step1019 = f'{schema2}.{tab}_transaction_volume_type_breakdown_{ver}_{ob_formatted}'
+step111 = f'{schema2}.{tab}_collection_call_features_{ver}_{ob_formatted}'
+step112 = f'{schema2}.{tab}_payhinga_features_{ver}_{ob_formatted}'
+
+step12c = f'{schema2}.PH_City_Province_Event_Mapping_{ver}_{ob_formatted}'
+
+step12d = f'{schema2}.{tab}_ph_shock_feature_{ver}_{ob_formatted}'
+step14 = f'{schema2}.{tab}_prevloan_less_6dpd_details_{ver}_{ob_formatted}'
+
+step17 = f'{schema2}.{tab}_customer_level_5dpd_details_{ver}_{ob_formatted}'
+
+step20 = f'dap_ds_poweruser_playground.{tab}_yuvashri_features_{ver}_{ob_formatted}'
+
+step22 = f'{schema2}.{tab}_finscore_{ver}_{ob_formatted}'
+step23 = f'{schema2}.{tab}_trustingsocialscore_{ver}_{ob_formatted}'
+step24 = f'{schema2}.{tab}_bureauinc_score_{ver}_{ob_formatted}'
+
+for step_name, step_value in {
+    "step61": step61,
+    "step62": step62,
+    "step63": step63,
+    "step64": step64,
+    "step65": step65,
+    "step66": step66,
+    "step67": step67,
+    "step68": step68,
+    "step682": step682,
+    "step69": step69,
+    "step610": step610,
+    "step611": step611,
+    "step612": step612,
+    "step6": step6,
+    "step7": step7,
+    "step8": step8,
+    "step9": step9,
+    "step101": step101,
+    "step102": step102,
+    "step103": step103,
+    "step104": step104,
+    "step105": step105,
+    "step106": step106,
+    "step107": step107,
+    "step108": step108,
+    "step109": step109,
+    "step1010": step1010,
+    "step1011": step1011,
+    "step1012": step1012,
+    "step1013": step1013,
+    "step1014": step1014,
+    "step10151": step10151,
+    "step10152": step10152,
+    "step1016": step1016,
+    "step1017": step1017,
+    "step1018": step1018,
+    "step1019": step1019,
+    "step111": step111,
+    "step112": step112,
+    "step12c": step12c,
+    "step12d": step12d,
+    "step14": step14,
+    "step17": step17,
+    "step20": step20,
+    "step22": step22,
+    "step23": step23,
+    "step24": step24,
+}.items():
+    print(f"{step_name}: {step_value}")
+
+
+
+# Final output tables (split by loan type)
+trench3_b_score_model_applied_loans = f'{tab}_model_applied_loans_app_package_{ver}_{ob_formatted}'
+
+print(f"OBDATE: {OBDATE}")
+print(f"Output table: {schema2}.{bscoresnapshotcombineddata}")
+
+print(f"Applied Table: {schema1}.{al}")
+print(f"Applied Trans Table: {schema1}.{altrans}")
+print(f"tsa_onboarded_but_never_applied_loan Table: {schema1}.{nal}")
+
+APP_PACKAGE = f'{tab}_applied_all_dis_loan_app_package_{ver}_{ob_formatted}'
+print(f"App Package Table: {schema2}.{APP_PACKAGE}")
+
+App_Feature_Table = f'{tab}_model_app_features_{ver}_{ob_formatted}'
+print(f"App Feature Table: {schema2}.{App_Feature_Table}")
+
+cic_feature_table = f'{tab}_cic_features_{ver}_{ob_formatted}'
+print(f"CIC Feature Table: {schema2}.{tab}_cic_features_{ver}_{ob_formatted}")
+
+android_devise_score_features = f"{tab}_android_device_score_feature_list_{ver}_{ob_formatted}"
+print(f"Android Device Score Feature Table: {schema2}.{android_devise_score_features}")
+
+ios_device_score_features = f"{tab}_ios_device_score_features_{ver}_{ob_formatted}"
+print(f"iOS Device Score Feature Table: {schema2}.{ios_device_score_features}")
+
+nitin_event_features = f"{schema2}.{tab}_events_feats_{ver}_{ob_formatted}"
+print(f"nitin_event_features Table: {nitin_event_features}")
+
+demo_features = f"{schema3}.{tab}_demo_features_{ver}"
+print(f"Demo Feature Table: {demo_features}")
+stepfinaltab = f"{schema2}.{tab}_model_full_features_v7_{ver}_{ob_formatted}"
+print(f"Final Feature Table: {stepfinaltab}")
+
+finaltab = f"{schema2}.{tab}_model_full_features_model_dataset_{ver}_{ob_formatted}"
+print(f"Final Table: {finaltab}")
