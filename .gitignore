@@ -1,0 +1,75 @@
+data/
+duckdb/
+parquet_chunks/
+Events_Features/
+Support_Data/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment variables
+.env
+
+
+# CSV files
+*.csv
+
+# Excel files
+*.xlsx
+*.xls
+*.xlsm
+
+# Pickle files
+*.pkl
+*.pickle
+
+# Parquet files
+*.parquet
+
+# Virtual environments
+.venv/
+venv/
+
+# Data files
+*.csv
+*.xlsx
+*.xls
+*.parquet
+*.pkl
+*.pickle
+*.feather
+*.duckdb
+*.db
+
+# Model artifacts
+*.joblib
+*.onnx
+*.h5
+*.pt
+
+# Archives
+*.zip
+*.tar
+*.gz
+*.7z
+
+# Logs
+*.log
+
+# Cache
+__pycache__/
+.ipynb_checkpoints/
+
