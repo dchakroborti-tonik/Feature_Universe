@@ -1,4 +1,3 @@
-
 # B Score model configuration
 # ─────────────────────────────────────────────────────────────────────────────
 from google.cloud import bigquery
@@ -14,14 +13,16 @@ schema1 = 'risk_mart'
 schema2 = 'worktable_data_analysis'
 schema3 = 'dap_ds_poweruser_playground'
 
+UTIL_PATH = F"D:\Officedata\Feature_Universe_Training"
+
 GS_BUCKET = "prod-asia-southeast1-tonik-report-analytics"
 GS_BUCKET_OLD = "prod-asia-southeast1-tonik-aiml-workspace"
 PROJECT_ID = "prj-prod-dataplatform"
 
-tab = 'bscore'
-ver = 'v26'
+tab = 'bscore_snapshot'
+ver = 'v27'
 
-OBDATE = '2026-08-20'   # Observation date — update for each scoring run
+OBDATE = '2026-10-04'   # Observation date — update for each scoring run
 SDATE  = '2023-01-01'   # Start date for training window
 EDATE  = OBDATE
 

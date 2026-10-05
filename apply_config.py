@@ -10,8 +10,8 @@ Usage:
 """
 
 import json
-import sys
 import os
+import sys
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -20,10 +20,10 @@ INSERT_AFTER = "schema3 = 'dap_ds_poweruser_playground'"
 
 # Root-level notebooks: need UTIL_PATH injected (used for sys.path imports)
 ROOT_NOTEBOOKS = [
-    ('Part1_Applied_Trans_Table.ipynb',  'Part1_Applied_Trans_Table_configured.ipynb'),
-    ('Part2_DC_Steps.ipynb',             'Part2_DC_Steps_configured.ipynb'),
-    ('Part3_Partners_Steps.ipynb',       'Part3_Partners_Steps_configured.ipynb'),
-    ('Part4_Final_Steps.ipynb',          'Part4_Final_Steps_configured.ipynb'),
+    ('Part1_Applied_Trans_Table_configured.ipynb',  'Part1_Applied_Trans_Table_configured.ipynb'),
+    ('Part2_DC_Steps_configured.ipynb',             'Part2_DC_Steps_configured.ipynb'),
+    ('Part3_Partners_Steps_configured.ipynb',       'Part3_Partners_Steps_configured.ipynb'),
+    ('Part3_Partners_Steps_configured.ipynb',          'Part4_Final_Steps_configured.ipynb'),
 ]
 
 # Partners notebooks: plain config.txt content (no UTIL_PATH needed)
