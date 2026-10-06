@@ -53,10 +53,10 @@ warnings.filterwarnings('ignore')
 
 # CONFIG
 PROJECT_ID = "prj-prod-dataplatform"
-SOURCE_TABLE = "risk_mart.bscore_moenagage_events_all_20230101_v6_snapshot_20260817"
+SOURCE_TABLE = "risk_mart.bscore_moenagage_events_all_20230101_training_20261005"
 
-OUTPUT_FILE = os.path.join(BASE_DIR, "b_score_events_output_v20260818.csv")
-CHECKPOINT_FILE = os.path.join(BASE_DIR, "b_score_events_checkpoint_v20260818.txt")
+OUTPUT_FILE = os.path.join(BASE_DIR, "b_score_events_output_v20261005.csv")
+CHECKPOINT_FILE = os.path.join(BASE_DIR, "b_score_events_checkpoint_v202610805.txt")
 BATCH_SIZE = 500
 
 USE_TEST_CUSTOMERS = False
