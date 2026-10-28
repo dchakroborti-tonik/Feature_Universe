@@ -22,9 +22,9 @@ GS_BUCKET_OLD = "prod-asia-southeast1-tonik-aiml-workspace"
 PROJECT_ID = "prj-prod-dataplatform"
 
 tab = 't_score_snapshot'
-ver = 'v1'
+ver = 'v2'
 
-OBDATE = '2026-10-21'   # Observation date — update for each scoring run
+OBDATE = '2026-10-27'   # Observation date — update for each scoring run
 SDATE  = '2023-01-01'   # Start date for training window
 EDATE  = OBDATE
 

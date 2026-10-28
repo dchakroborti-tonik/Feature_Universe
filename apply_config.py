@@ -23,7 +23,7 @@ ROOT_NOTEBOOKS = [
     ('Part1_Applied_Trans_Table_configured.ipynb',  'Part1_Applied_Trans_Table_configured.ipynb'),
     ('Part2_DC_Steps_configured.ipynb',             'Part2_DC_Steps_configured.ipynb'),
     ('Part3_Partners_Steps_configured.ipynb',       'Part3_Partners_Steps_configured.ipynb'),
-    ('Part3_Partners_Steps_configured.ipynb',          'Part4_Final_Steps_configured.ipynb'),
+    ('Part3_Partners_Steps_configured.ipynb',          'Part4_Final_Steps_configured copy.ipynb'),
 ]
 
 # Partners notebooks: plain config.txt content (no UTIL_PATH needed)
