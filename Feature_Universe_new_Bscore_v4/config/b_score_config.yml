@@ -1,0 +1,20 @@
+# B Score shared run parameters
+# Edit ONLY this file for each model run. Every notebook picks it up via b_score_config.py.
+# Single quotes keep Windows backslashes literal.
+
+project_id: prj-prod-dataplatform
+gs_bucket: prod-asia-southeast1-tonik-report-analytics
+gs_bucket_old: prod-asia-southeast1-tonik-aiml-workspace
+
+util_path: 'D:\OneDrive - Tonik Financial Pte Ltd\MyStuff\Data Engineering\Model_Data_Set_preparation\DC_Model_Data_Sets_Feature_Universe\Feature_Universe_Training_Config'
+
+schemas:
+  schema1: risk_mart
+  schema2: worktable_data_analysis
+  schema3: dap_ds_poweruser_playground
+
+tab: b_scorev4
+ver: vm1
+
+obdate: '2026-11-19'   # Observation date - update for each scoring run
+sdate: '2023-01-01'    # Start date for training window

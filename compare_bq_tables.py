@@ -9,28 +9,23 @@ Output workbook:
 Requirements:  pip install google-cloud-bigquery pandas numpy openpyxl db-dtypes pyarrow
 """
 
+import gc
 from datetime import date, datetime
 from decimal import Decimal
-
-import gc
 
 import numpy as np
 import pandas as pd
 from google.cloud import bigquery
-from pandas.api.types import (
-    is_bool_dtype,
-    is_datetime64_any_dtype,
-    is_float_dtype,
-    is_numeric_dtype,
-)
+from pandas.api.types import (is_bool_dtype, is_datetime64_any_dtype,
+                              is_float_dtype, is_numeric_dtype)
 
 # --------------------------------------------------------------------------
 # CONFIG
 # --------------------------------------------------------------------------
 PROJECT_ID = "prj-prod-dataplatform"
-TABLE_1 = "prj-prod-dataplatform.dataset_a.table_one"   # <-- change
-TABLE_2 = "prj-prod-dataplatform.dataset_b.table_two"   # <-- change
-KEYS = ["id_customerid", "dt_obs_date"]   # one or more columns, e.g. ["digitalloanAccountId"]
+TABLE_1 = "prj-prod-dataplatform.risk_mart.applied_loans_20210701_20261110_trans"   # <-- change
+TABLE_2 = "prj-prod-dataplatform.risk_mart.applied_loans_20210701_20261109_trans"   # <-- change
+KEYS = ["customerId", "digitalLoanAccountId"]   # one or more columns, e.g. ["digitalloanAccountId"]
 DECIMALS = 2
 # Timestamps are floored to this precision before comparing, so 10:00:00.123 and
 # 10:00:00.456 are treated as the same. Use "s", "ms", "us", or None to keep full precision.
@@ -39,7 +34,7 @@ DAYFIRST = False   # only used when a text column must be parsed as dates: True 
 DATE_FORMAT = "%Y-%m-%d"
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 OUTPUT_FILE = "table_comparison.xlsx"
-BATCH_SIZE = 10        # non-key columns loaded & compared per pass (lower it if you still run out of memory)
+BATCH_SIZE = 5        # non-key columns loaded & compared per pass (lower it if you still run out of memory)
 EXCEL_MAX_ROWS = 1_000_000  # Excel limit is 1,048,576; leave headroom
 
 
