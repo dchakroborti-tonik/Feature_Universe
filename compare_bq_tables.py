@@ -16,25 +16,32 @@ from decimal import Decimal
 import numpy as np
 import pandas as pd
 from google.cloud import bigquery
-from pandas.api.types import (is_bool_dtype, is_datetime64_any_dtype,
-                              is_float_dtype, is_numeric_dtype)
+from pandas.api.types import (
+    is_bool_dtype,
+    is_datetime64_any_dtype,
+    is_float_dtype,
+    is_numeric_dtype,
+)
 
 # --------------------------------------------------------------------------
 # CONFIG
 # --------------------------------------------------------------------------
 PROJECT_ID = "prj-prod-dataplatform"
-TABLE_1 = "prj-prod-dataplatform.risk_mart.applied_loans_20210701_20261110_trans"   # <-- change
-TABLE_2 = "prj-prod-dataplatform.risk_mart.applied_loans_20210701_20261109_trans"   # <-- change
-KEYS = ["customerId", "digitalLoanAccountId"]   # one or more columns, e.g. ["digitalloanAccountId"]
+TABLE_1 = "worktable_data_analysis.b_scorev4_outbound_voice_features_v1_1_20261124"  # <-- change
+TABLE_2 = "worktable_data_analysis.b_scorev4_outbound_voice_features_vm1_20261119"  # <-- change
+KEYS = [
+    "customer_id",
+    "obs_date",
+]  # one or more columns, e.g. ["digitalloanAccountId"]
 DECIMALS = 2
 # Timestamps are floored to this precision before comparing, so 10:00:00.123 and
 # 10:00:00.456 are treated as the same. Use "s", "ms", "us", or None to keep full precision.
 DATETIME_PRECISION = "s"
-DAYFIRST = False   # only used when a text column must be parsed as dates: True -> "01/04/2026" = 1 Apr
+DAYFIRST = False  # only used when a text column must be parsed as dates: True -> "01/04/2026" = 1 Apr
 DATE_FORMAT = "%Y-%m-%d"
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 OUTPUT_FILE = "table_comparison.xlsx"
-BATCH_SIZE = 5        # non-key columns loaded & compared per pass (lower it if you still run out of memory)
+BATCH_SIZE = 5  # non-key columns loaded & compared per pass (lower it if you still run out of memory)
 EXCEL_MAX_ROWS = 1_000_000  # Excel limit is 1,048,576; leave headroom
 
 
@@ -99,21 +106,27 @@ def format_datetimes(s: pd.Series, date_only: bool) -> pd.Series:
 
 def harmonize_datetime_columns(df1: pd.DataFrame, df2: pd.DataFrame, cols) -> None:
     """If a column is date-like in one table but text in the other (e.g. DATE vs
-    STRING '2026-01-31' or '31/01/2026'), parse the text side so both compare as dates."""
+    STRING '2026-01-31' or '31/01/2026'), parse the text side so both compare as dates.
+    """
     for col in cols:
         for a, b in ((df1, df2), (df2, df1)):
             if is_datetime64_any_dtype(a[col]) and not is_datetime64_any_dtype(b[col]):
                 try:
-                    parsed = pd.to_datetime(b[col], errors="coerce", format="mixed",
-                                            dayfirst=DAYFIRST)
+                    parsed = pd.to_datetime(
+                        b[col], errors="coerce", format="mixed", dayfirst=DAYFIRST
+                    )
                     if parsed.notna().sum() == b[col].notna().sum():
                         b[col] = normalize_datetime(parsed)
                     else:
-                        print(f"WARNING: column '{col}' is a date in one table but some "
-                              "values in the other could not be parsed as dates; "
-                              "comparing as text.")
+                        print(
+                            f"WARNING: column '{col}' is a date in one table but some "
+                            "values in the other could not be parsed as dates; "
+                            "comparing as text."
+                        )
                 except Exception:
-                    print(f"WARNING: could not parse '{col}' as a date in the other table.")
+                    print(
+                        f"WARNING: could not parse '{col}' as a date in the other table."
+                    )
 
 
 def normalize_key(s: pd.Series) -> pd.Series:
@@ -155,8 +168,10 @@ def normalize(df: pd.DataFrame) -> pd.DataFrame:
 
 def is_numeric(s1: pd.Series, s2: pd.Series) -> bool:
     return (
-        is_numeric_dtype(s1) and is_numeric_dtype(s2)
-        and not is_bool_dtype(s1) and not is_bool_dtype(s2)
+        is_numeric_dtype(s1)
+        and is_numeric_dtype(s2)
+        and not is_bool_dtype(s1)
+        and not is_bool_dtype(s2)
     )
 
 
@@ -201,19 +216,29 @@ def main():
     for name, df in (("table 1", k1), ("table 2", k2)):
         n_null = int(df[KEYS].isna().any(axis=1).sum())
         if n_null:
-            print(f"WARNING: {n_null} row(s) in {name} have a null key and will not match.")
+            print(
+                f"WARNING: {n_null} row(s) in {name} have a null key and will not match."
+            )
 
     dup1, dup2 = int(k1.duplicated(KEYS).sum()), int(k2.duplicated(KEYS).sum())
     if dup1 or dup2:
-        print(f"WARNING: duplicate keys found (table1={dup1}, table2={dup2}). "
-              "Inner join will produce multiple rows for those keys.")
+        print(
+            f"WARNING: duplicate keys found (table1={dup1}, table2={dup2}). "
+            "Inner join will produce multiple rows for those keys."
+        )
 
     n_rows1, n_rows2 = len(k1), len(k2)
     n_matched = len(k1.merge(k2, on=KEYS, how="inner"))
-    only1 = len(k1.merge(k2.drop_duplicates(KEYS), on=KEYS, how="left", indicator=True)
-                  .query("_merge == 'left_only'"))
-    only2 = len(k2.merge(k1.drop_duplicates(KEYS), on=KEYS, how="left", indicator=True)
-                  .query("_merge == 'left_only'"))
+    only1 = len(
+        k1.merge(k2.drop_duplicates(KEYS), on=KEYS, how="left", indicator=True).query(
+            "_merge == 'left_only'"
+        )
+    )
+    only2 = len(
+        k2.merge(k1.drop_duplicates(KEYS), on=KEYS, how="left", indicator=True).query(
+            "_merge == 'left_only'"
+        )
+    )
     del k1, k2
     gc.collect()
 
@@ -221,7 +246,7 @@ def main():
     detail_frames, summary_rows = [], []
     n_batches = -(-len(common_cols) // BATCH_SIZE)
     for bi, i in enumerate(range(0, len(common_cols), BATCH_SIZE), 1):
-        batch = common_cols[i:i + BATCH_SIZE]
+        batch = common_cols[i : i + BATCH_SIZE]
         print(f"Batch {bi}/{n_batches}: {len(batch)} column(s)...")
         d1 = normalize(load_table(client, TABLE_1, KEYS + batch))
         d2 = normalize(load_table(client, TABLE_2, KEYS + batch))
@@ -237,9 +262,9 @@ def main():
             is_dt = is_datetime64_any_dtype(a) and is_datetime64_any_dtype(b)
             date_only = is_dt and is_date_only(a, b)
             dtype_label = (
-                "numeric" if diff is not None
-                else ("date" if date_only else "datetime") if is_dt
-                else "non-numeric"
+                "numeric"
+                if diff is not None
+                else ("date" if date_only else "datetime") if is_dt else "non-numeric"
             )
 
             row = {
@@ -248,7 +273,9 @@ def main():
                 "rows_compared": n_matched,
                 "mismatches": n_mis,
                 "pct_mismatch": round(100 * n_mis / n_matched, 2) if n_matched else 0.0,
-                "null_vs_value_mismatches": int((mismatch & (a.isna() ^ b.isna())).sum()),
+                "null_vs_value_mismatches": int(
+                    (mismatch & (a.isna() ^ b.isna())).sum()
+                ),
                 "max_abs_diff": np.nan,
                 "mean_abs_diff": np.nan,
                 "sum_diff": np.nan,
@@ -266,23 +293,31 @@ def main():
                 det["column"] = col
                 va, vb = a[mismatch], b[mismatch]
                 if is_dt:  # show dates / datetimes in one consistent text format
-                    va, vb = format_datetimes(va, date_only), format_datetimes(vb, date_only)
+                    va, vb = format_datetimes(va, date_only), format_datetimes(
+                        vb, date_only
+                    )
                 det["table1_value"] = va.values
                 det["table2_value"] = vb.values
-                det["difference"] = diff[mismatch].values if diff is not None else np.nan
+                det["difference"] = (
+                    diff[mismatch].values if diff is not None else np.nan
+                )
                 detail_frames.append(det)
 
         del merged
         gc.collect()
 
-    summary = pd.DataFrame(summary_rows).sort_values(
-        "mismatches", ascending=False
-    ).reset_index(drop=True)
+    summary = (
+        pd.DataFrame(summary_rows)
+        .sort_values("mismatches", ascending=False)
+        .reset_index(drop=True)
+    )
 
     details = (
         pd.concat(detail_frames, ignore_index=True)
         if detail_frames
-        else pd.DataFrame(columns=KEYS + ["column", "table1_value", "table2_value", "difference"])
+        else pd.DataFrame(
+            columns=KEYS + ["column", "table1_value", "table2_value", "difference"]
+        )
     )
     # Keep value columns as object so numeric and text mismatches can coexist
     details["table1_value"] = details["table1_value"].astype(object)
@@ -296,24 +331,30 @@ def main():
     overview = pd.DataFrame(
         {
             "metric": [
-                "Table 1", "Table 2",
-                "Rows in table 1", "Rows in table 2",
+                "Table 1",
+                "Table 2",
+                "Rows in table 1",
+                "Rows in table 2",
                 "Rows matched (inner join on keys)",
                 "Rows only in table 1 (not compared)",
                 "Rows only in table 2 (not compared)",
                 "Columns compared",
-                "Columns only in table 1", "Columns only in table 2",
+                "Columns only in table 1",
+                "Columns only in table 2",
                 "Columns with >=1 mismatch",
                 "Total cell mismatches",
             ],
             "value": [
-                TABLE_1, TABLE_2,
-                n_rows1, n_rows2,
+                TABLE_1,
+                TABLE_2,
+                n_rows1,
+                n_rows2,
                 n_matched,
                 only1,
                 only2,
                 len(common_cols),
-                ", ".join(only_in_1) or "-", ", ".join(only_in_2) or "-",
+                ", ".join(only_in_1) or "-",
+                ", ".join(only_in_2) or "-",
                 int((summary["mismatches"] > 0).sum()),
                 int(summary["mismatches"].sum()),
             ],
@@ -333,7 +374,7 @@ def main():
             details.to_excel(writer, sheet_name="Details", index=False)
         else:
             for i, start in enumerate(range(0, len(details), EXCEL_MAX_ROWS), 1):
-                details.iloc[start:start + EXCEL_MAX_ROWS].to_excel(
+                details.iloc[start : start + EXCEL_MAX_ROWS].to_excel(
                     writer, sheet_name=f"Details_{i}", index=False
                 )
 
@@ -342,17 +383,23 @@ def main():
         for ws in writer.book.worksheets:
             ws.freeze_panes = "A2" if ws.title != "Summary" else None
             for col_cells in ws.columns:
-                width = max(len(str(c.value)) if c.value is not None else 0
-                            for c in col_cells[:200])
-                ws.column_dimensions[col_cells[0].column_letter].width = min(width + 2, 60)
+                width = max(
+                    len(str(c.value)) if c.value is not None else 0
+                    for c in col_cells[:200]
+                )
+                ws.column_dimensions[col_cells[0].column_letter].width = min(
+                    width + 2, 60
+                )
             for row in ws.iter_rows():
                 for c in row:
                     if isinstance(c.value, float):
                         c.number_format = num_fmt
 
-    print(f"Done. {n_matched:,} matched rows, "
-          f"{int(summary['mismatches'].sum()):,} cell mismatches across "
-          f"{int((summary['mismatches'] > 0).sum())} columns.")
+    print(
+        f"Done. {n_matched:,} matched rows, "
+        f"{int(summary['mismatches'].sum()):,} cell mismatches across "
+        f"{int((summary['mismatches'] > 0).sum())} columns."
+    )
 
 
 if __name__ == "__main__":
